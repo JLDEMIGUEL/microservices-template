@@ -1,4 +1,4 @@
-package com.jldemiguel.apigateway.config;
+package com.jldemiguel.microservice1.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
