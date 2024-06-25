@@ -1,2 +1,3 @@
 rootProject.name = 'microservices-template'
 include 'auth-server'
+include 'microservice-1'
