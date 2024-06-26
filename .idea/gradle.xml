@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/auth-server" />
             <option value="$PROJECT_DIR$/eureka-server" />
             <option value="$PROJECT_DIR$/microservice-1" />
+            <option value="$PROJECT_DIR$/microservice-2" />
           </set>
         </option>
       </GradleProjectSettings>
