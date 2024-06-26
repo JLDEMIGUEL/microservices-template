@@ -14,10 +14,14 @@ spring:
           uri: lb://microservice-1
           predicates:
             - Path=/microservice-1/**
+          filters:
+            - RewritePath=/microservice-1/(?<remaining>.*), /${remaining}
         - id: microservice-2
           uri: lb://microservice-2
           predicates:
             - Path=/microservice-2/**
+          filters:
+            - RewritePath=/microservice-2/(?<remaining>.*), /${remaining}
 
 eureka:
   client:
