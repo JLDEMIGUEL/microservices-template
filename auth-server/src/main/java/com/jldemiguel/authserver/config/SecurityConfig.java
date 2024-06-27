@@ -117,6 +117,10 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(new AntPathRequestMatcher("/h2-console/**"));
+        return (web) -> web.ignoring().requestMatchers(
+                new AntPathRequestMatcher("/h2-console/**"),
+                new AntPathRequestMatcher("/actuator/health/livenessState"),
+                new AntPathRequestMatcher("/actuator/health/readinessState")
+        );
     }
 }
