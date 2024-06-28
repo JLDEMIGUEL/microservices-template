@@ -4,6 +4,18 @@ server:
 spring:
   application:
     name: microservice-1
+  datasource:
+    url: jdbc:h2:file:./testdb;AUTO_SERVER=TRUE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
   security:
     oauth2:
       resourceserver:
