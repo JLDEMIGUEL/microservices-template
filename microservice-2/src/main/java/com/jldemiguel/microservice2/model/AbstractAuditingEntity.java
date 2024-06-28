@@ -1,4 +1,4 @@
-package com.jldemiguel.microservice1.model;
+package com.jldemiguel.microservice2.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;

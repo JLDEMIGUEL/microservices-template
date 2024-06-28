@@ -1,4 +1,4 @@
-package com.jldemiguel.microservice1.model;
+package com.jldemiguel.microservice2.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,15 +15,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
-public class Product extends AbstractAuditingEntity<UUID>{
+public class Order extends AbstractAuditingEntity<UUID>{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column
-    private String name;
+    private UUID userId;
 
-    @Column(precision = 2)
-    private Double price;
+    @Column
+    private UUID productId;
 }
