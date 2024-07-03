@@ -13,7 +13,7 @@ import java.util.Optional;
 public class DatabaseConfig {
 
     @Bean
-    public AuditorAware<String> auditorAware(){
+    public AuditorAware<String> auditorAware() {
         return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 

@@ -16,7 +16,7 @@ public class OrderService {
     private final ProductService service;
 
     public Order placeOrder(Order order) {
-        service.getProductById(order.getProductId());
+        service.checkIfProductExists(order.getProductId());
         return repository.save(order);
     }
 
