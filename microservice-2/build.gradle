@@ -38,6 +38,8 @@ dependencies {
 
     implementation 'com.h2database:h2'
 
+    implementation 'io.micrometer:micrometer-tracing'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
