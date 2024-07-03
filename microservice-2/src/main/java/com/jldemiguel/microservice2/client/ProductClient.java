@@ -5,6 +5,7 @@ import com.jldemiguel.microservice2.model.Product;
 import com.jldemiguel.microservice2.model.reponse.ErrorResponse;
 import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
@@ -25,11 +26,13 @@ public interface ProductClient {
     @GetMapping("/{id}")
     Product getProductById(@PathVariable UUID id);
 
+    @Slf4j
     class Config {
 
         @Bean
         public RequestInterceptor requestInterceptor() {
             return request -> {
+                log.info("Adding authorization header to request {}", request.url());
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null && authentication.getCredentials() instanceof Jwt jwt) {
                     request.header("Authorization", "Bearer " + jwt.getTokenValue());
@@ -43,6 +46,7 @@ public interface ProductClient {
                 try {
                     ErrorResponse errorResponse =
                             objectMapper.readValue(response.body().asInputStream(), ErrorResponse.class);
+                    log.error("Error when calling " + methodKey + ". Error: " + errorResponse.getReason());
                     throw new RuntimeException("Error when calling " + methodKey + ". Error: " +
                             errorResponse.getReason());
                 } catch (IOException e) {

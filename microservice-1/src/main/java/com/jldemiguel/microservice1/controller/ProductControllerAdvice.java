@@ -16,6 +16,7 @@ public class ProductControllerAdvice {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .reason(e.getMessage())
                 .build();
+        log.error("Exception while processing request: {}", e.getMessage(), e);
         return ResponseEntity.badRequest().body(errorResponse);
     }
 }
