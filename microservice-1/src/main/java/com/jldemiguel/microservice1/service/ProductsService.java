@@ -1,7 +1,8 @@
 package com.jldemiguel.microservice1.service;
 
-import com.jldemiguel.microservice1.model.Product;
+import com.jldemiguel.microservice1.model.jpa.Product;
 import com.jldemiguel.microservice1.repository.ProductsRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class ProductsService {
     }
 
     public Product getProductById(UUID id) {
-        return repository.findById(id).orElse(Product.builder().build());
+        return repository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Product with ID: " + id + " not found"));
     }
 }

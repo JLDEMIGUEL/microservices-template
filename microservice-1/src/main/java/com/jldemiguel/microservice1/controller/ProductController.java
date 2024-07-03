@@ -1,6 +1,6 @@
 package com.jldemiguel.microservice1.controller;
 
-import com.jldemiguel.microservice1.model.Product;
+import com.jldemiguel.microservice1.model.jpa.Product;
 import com.jldemiguel.microservice1.service.ProductsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,17 +15,17 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/product")
 @RequiredArgsConstructor
-public class ProductsController {
+public class ProductController {
 
     private final ProductsService service;
 
     @GetMapping("")
-    public ResponseEntity<List<Product>> getAllProducts(){
+    public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(service.getAllProducts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable UUID id){
+    public ResponseEntity<Product> getProductById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getProductById(id));
     }
 }
