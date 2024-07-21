@@ -23,7 +23,7 @@ public class OrderService {
         Product product = service.getProductById(order.getProductId());
         log.info("Placing order: " + order.getProductId() + " for user: " + order.getUserId());
         Order savedOrder = repository.save(order);
-        mailService.sendEmail(savedOrder, product);
+        mailService.sendEmail(product);
         return savedOrder;
     }
 
