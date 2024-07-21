@@ -1,5 +1,6 @@
 package com.jldemiguel.mailservice.config;
 
+import com.jldemiguel.mailservice.handler.PlaceOrderMailHandler;
 import com.jldemiguel.mailservice.model.UserOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 public class StreamsConfig {
 
     @Bean
-    public Consumer<UserOrder> placeOrder() {
-        return userOrder -> log.info("Sending email {}", userOrder); //TODO
+    public Consumer<UserOrder> placeOrder(PlaceOrderMailHandler handler) {
+        return handler::sendPlaceOrderEmail;
     }
 }
