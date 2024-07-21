@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -28,6 +29,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.UUID;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -65,6 +67,11 @@ public class SecurityConfig {
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .scope("openid")
                 .redirectUri("http://127.0.0.1:9000/login")
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofDays(1))
+                        .refreshTokenTimeToLive(Duration.ofDays(1))
+                        .authorizationCodeTimeToLive(Duration.ofDays(1))
+                        .build())
                 .build();
 
         RegisteredClient clientCredentialsClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -75,6 +82,10 @@ public class SecurityConfig {
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .scope("openid")
                 .redirectUri("http://127.0.0.1:9000/login")
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofDays(1))
+                        .refreshTokenTimeToLive(Duration.ofDays(1))
+                        .build())
                 .build();
 
         return new InMemoryRegisteredClientRepository(authCodeClient, clientCredentialsClient);
