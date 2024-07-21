@@ -150,7 +150,8 @@ public class SecurityConfig {
         return (web) -> web.ignoring().requestMatchers(
                 new AntPathRequestMatcher("/h2-console/**"),
                 new AntPathRequestMatcher("/actuator/health/livenessState"),
-                new AntPathRequestMatcher("/actuator/health/readinessState")
+                new AntPathRequestMatcher("/actuator/health/readinessState"),
+                new AntPathRequestMatcher("/user/register")
         );
     }
 }
