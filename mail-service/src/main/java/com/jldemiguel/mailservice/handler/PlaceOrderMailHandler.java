@@ -15,7 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PlaceOrderMailHandler {
 
-    private static final String PLACE_ORDER_SUBJECT = "You have place a new order!";
+    private static final String PLACE_ORDER_SUBJECT = "You have placed a new order!";
     private static final String PLACE_ORDER_EMAIL_TEMPLATE = "placeOrderEmail";
 
     private final MailService mailService;
