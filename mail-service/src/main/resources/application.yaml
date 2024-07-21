@@ -9,6 +9,23 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9000
+  cloud:
+    function:
+      definition: "placeOrder"
+    stream:
+      default-binder: rabbit
+      bindings:
+        placeOrder-in-0:
+          destination: sendEmail
+          group: placeOrder
+          content-type: application/json
+          binder: rabbit
+      rabbit:
+        bindings:
+          placeOrder-in-0:
+            consumer:
+              republish-to-dlq: false
+              binding-routing-key: place-order
 
 eureka:
   client:

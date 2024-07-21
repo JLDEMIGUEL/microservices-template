@@ -1,5 +1,6 @@
 package com.jldemiguel.microservice2.service;
 
+import com.jldemiguel.microservice2.model.Product;
 import com.jldemiguel.microservice2.model.jpa.Order;
 import com.jldemiguel.microservice2.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +17,14 @@ public class OrderService {
 
     private final OrderRepository repository;
     private final ProductService service;
+    private final MailService mailService;
 
     public Order placeOrder(Order order) {
-        service.checkIfProductExists(order.getProductId());
+        Product product = service.getProductById(order.getProductId());
         log.info("Placing order: " + order.getProductId() + " for user: " + order.getUserId());
-        return repository.save(order);
+        Order savedOrder = repository.save(order);
+        mailService.sendEmail(savedOrder, product);
+        return savedOrder;
     }
 
     public List<Order> getUserOrders(UUID userId) {
