@@ -34,7 +34,7 @@ public class UserControllerAdvice {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .reason(e.getMessage())
                 .build();
-        log.warn("Exception while processing request: {}", e.getMessage(), e);
+        log.warn("Username or email already exists", e);
         return ResponseEntity.badRequest().body(errorResponse);
     }
 }

@@ -10,6 +10,12 @@ spring:
         locator:
           enabled: true
       routes:
+        - id: auth-server
+          uri: lb://auth-server
+          predicates:
+            - Path=/auth-server/**
+          filters:
+            - RewritePath=/auth-server/(?<remaining>.*), /${remaining}
         - id: microservice-1
           uri: lb://microservice-1
           predicates:
