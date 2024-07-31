@@ -17,6 +17,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     public void registerUser(UserDto user) {
         User newUser = User.builder()
@@ -26,5 +27,7 @@ public class UserService {
                 .role(USER_ROLE)
                 .build();
         userRepository.save(newUser);
+
+        mailService.sendEmail(user);
     }
 }

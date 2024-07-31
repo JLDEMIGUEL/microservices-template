@@ -20,6 +20,17 @@ spring:
     oauth2:
       authorizationserver:
         issuer: http://localhost:9000
+  cloud:
+    stream:
+      default-binder: rabbit
+      bindings:
+        sendEmail:
+          destination: sendEmail
+      rabbit:
+        bindings:
+          sendEmail:
+            producer:
+              routing-key-expression: headers['routingKey']
 
 eureka:
   client:

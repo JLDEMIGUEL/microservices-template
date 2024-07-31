@@ -22,10 +22,15 @@ spring:
             enable: true
   cloud:
     function:
-      definition: "placeOrder"
+      definition: "newAccount;placeOrder"
     stream:
       default-binder: rabbit
       bindings:
+        newAccount-in-0:
+          destination: sendEmail
+          group: newAccount
+          content-type: application/json
+          binder: rabbit
         placeOrder-in-0:
           destination: sendEmail
           group: placeOrder
@@ -33,6 +38,10 @@ spring:
           binder: rabbit
       rabbit:
         bindings:
+          newAccount-in-0:
+            consumer:
+              republish-to-dlq: false
+              binding-routing-key: new-account
           placeOrder-in-0:
             consumer:
               republish-to-dlq: false
