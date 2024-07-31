@@ -58,8 +58,3 @@ management:
       enabled: true
     readinessstate:
       enabled: true
-
-logging:
-  pattern:
-    level: "%5p"
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%15.15t] %-40.40logger{39} : %msg%n%ex"
