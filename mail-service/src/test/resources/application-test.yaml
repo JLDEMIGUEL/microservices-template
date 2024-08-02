@@ -1,0 +1,23 @@
+spring:
+  cloud:
+    function:
+      definition: "newAccount;placeOrder"
+    stream:
+      default-binder: rabbit
+      bindings:
+        newAccount-in-0:
+          destination: sendEmail.newAccount
+          content-type: application/json
+        placeOrder-in-0:
+          destination: sendEmail.placeOrder
+          content-type: application/json
+      rabbit:
+        bindings:
+          newAccount-in-0:
+            consumer:
+              republish-to-dlq: false
+              binding-routing-key: new-account
+          placeOrder-in-0:
+            consumer:
+              republish-to-dlq: false
+              binding-routing-key: place-order
