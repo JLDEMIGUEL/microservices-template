@@ -31,10 +31,10 @@ public class UserControllerAdvice {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .reason(e.getMessage())
-                .build();
         log.warn("Username or email already exists", e);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .reason("Username or email already exists")
+                .build();
         return ResponseEntity.badRequest().body(errorResponse);
     }
 }

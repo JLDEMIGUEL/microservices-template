@@ -20,7 +20,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("register")
+    @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody UserDto user) {
         log.info("Registering user with username : {}, and email: {}", user.getUsername(), user.getEmail());
         userService.registerUser(user);
