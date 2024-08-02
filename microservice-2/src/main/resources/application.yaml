@@ -53,3 +53,6 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+microservice-1:
+  url: microservice-1

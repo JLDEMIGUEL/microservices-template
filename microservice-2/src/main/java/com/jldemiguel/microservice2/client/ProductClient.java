@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 
-@FeignClient(value = "microservice-1",
+@FeignClient(value = "${microservice-1.url}",
         path = "/product",
         configuration = ProductClient.Config.class)
 public interface ProductClient {
