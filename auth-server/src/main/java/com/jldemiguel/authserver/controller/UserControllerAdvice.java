@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -18,15 +19,16 @@ import java.util.Map;
 public class UserControllerAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, ?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        List<String> list = ex.getBindingResult().getAllErrors().stream().map((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+            return fieldName + ": " + errorMessage;
+        }).toList();
         log.warn("Validation errors: {}", errors);
-        return ResponseEntity.badRequest().body(errors);
+        ErrorResponse errorResponse = ErrorResponse.builder().reason(String.join(". ", list)).build();
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

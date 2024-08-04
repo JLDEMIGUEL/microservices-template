@@ -7,6 +7,9 @@ import com.jldemiguel.authserver.model.UserDto;
 import com.jldemiguel.authserver.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -83,5 +88,50 @@ public class UserControllerIntegrationTest {
         //then
         ErrorResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
         assertEquals("Username or email already exists", response.getReason());
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidUserDtos")
+    void shouldReturnError_whenUsernameAndEmailAreNotValid(UserDto invalidUser, String errorMessage) throws Exception {
+        //when
+        MvcResult result = mockMvc.perform(post("/user/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidUser)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        //then
+        ErrorResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+        assertEquals(errorMessage, response.getReason());
+    }
+
+
+    public static Stream<Arguments> invalidUserDtos() {
+        return Stream.of(
+                Arguments.of(UserDto.builder()
+                                .username("")
+                                .email("test@test.com")
+                                .password("123456")
+                                .build(),
+                        "username: Username cannot be blank"),
+                Arguments.of(UserDto.builder()
+                                .username("test")
+                                .email("")
+                                .password("123456")
+                                .build(),
+                        "email: Email must be valid. email: Email cannot be blank"),
+                Arguments.of(UserDto.builder()
+                                .username("test")
+                                .email("invalidemail")
+                                .password("123456")
+                                .build(),
+                        "email: Email must be valid"),
+                Arguments.of(UserDto.builder()
+                                .username("test")
+                                .email("test@test.com")
+                                .password("")
+                                .build(),
+                        "password: Password cannot be blank")
+        );
     }
 }
