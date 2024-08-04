@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -27,4 +29,8 @@ public class User {
     private String password;
 
     private String role;
+
+    @CreatedDate
+    @Column(name = "registration_date", updatable = false)
+    private Instant createdDate = Instant.now();
 }

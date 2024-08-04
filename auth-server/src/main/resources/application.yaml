@@ -12,10 +12,12 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
   h2:
     console:
       enabled: true
+  flyway:
+    baseline-on-migrate: true
   security:
     oauth2:
       authorizationserver:

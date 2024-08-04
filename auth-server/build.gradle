@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
 
     implementation 'com.h2database:h2'
+    implementation 'org.flywaydb:flyway-core'
 
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
