@@ -60,6 +60,7 @@ public class OrderControllerIntegrationTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private OutputDestination output;
 
     @Autowired

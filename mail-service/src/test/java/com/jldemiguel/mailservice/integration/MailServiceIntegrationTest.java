@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 public class MailServiceIntegrationTest {
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private InputDestination input;
 
     @MockBean
