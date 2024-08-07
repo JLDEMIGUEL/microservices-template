@@ -15,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
+@Table(name = "orders")
 public class Order extends AbstractAuditingEntity<UUID> {
 
     @Id

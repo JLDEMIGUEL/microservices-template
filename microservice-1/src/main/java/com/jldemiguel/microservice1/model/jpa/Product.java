@@ -15,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
+@Table(name = "products")
 public class Product extends AbstractAuditingEntity<UUID> {
 
     @Id

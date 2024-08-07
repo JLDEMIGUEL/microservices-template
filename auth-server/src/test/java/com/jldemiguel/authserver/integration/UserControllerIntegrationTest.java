@@ -119,7 +119,7 @@ public class UserControllerIntegrationTest {
                                 .email("")
                                 .password("123456")
                                 .build(),
-                        "email: Email must be valid. email: Email cannot be blank"),
+                        "email: Email cannot be blank. email: Email must be valid"),
                 Arguments.of(UserDto.builder()
                                 .username("test")
                                 .email("invalidemail")
