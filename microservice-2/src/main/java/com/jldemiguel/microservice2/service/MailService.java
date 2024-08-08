@@ -26,9 +26,9 @@ public class MailService {
 
     public Mono<Void> sendEmail(Product product) {
         return getEmail()
-                .map(email -> {
+                .doOnNext(email -> {
                     UserOrder userOrder = UserOrder.builder()
-                            .email(email)
+                            .email((String) email)
                             .price(product.getPrice())
                             .product(product.getName())
                             .build();
@@ -36,15 +36,16 @@ public class MailService {
                     streamBridge.send(SEND_EMAIL_EXCHANGE, MessageBuilder.withPayload(userOrder)
                             .setHeader(ROUTING_KEY_HEADER, PLACE_ORDER_ROUTING_KEY)
                             .build());
-                    return userOrder;
-                }).then();
+                }).then()
+                .onErrorMap(e -> new RuntimeException("No email found in the request"));
     }
 
-    private Mono<String> getEmail() {
+    private Mono<Object> getEmail() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof Jwt)
-                .map(principal -> ((Jwt) principal).getClaim("email"));
+                .map(principal -> ((Jwt) principal).getClaim("email"))
+                .switchIfEmpty(Mono.error(new RuntimeException()));
     }
 }

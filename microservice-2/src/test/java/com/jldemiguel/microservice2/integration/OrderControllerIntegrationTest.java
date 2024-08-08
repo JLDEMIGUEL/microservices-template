@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static com.jldemiguel.microservice2.integration.OrderControllerIntegrationTest.PORT;
 import static com.jldemiguel.microservice2.util.PollingUtils.poll;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,6 +74,7 @@ public class OrderControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         orderRepository.deleteAll().block();
+        wireMockServer.resetAll();
     }
 
     @ParameterizedTest
@@ -108,9 +110,10 @@ public class OrderControllerIntegrationTest {
 
     @Test
     void shouldReturnErrorMessage_whenInvalidSubjectInJwt() {
-
+        // given
         SecurityMockServerConfigurers.JwtMutator invalidJwt = mockJwt().jwt(jwt -> jwt
                 .claim("sub", "invalid").claim("email", "invalid@test.com"));
+
         // when - then
         webTestClient
                 .mutateWith(invalidJwt)
@@ -132,7 +135,7 @@ public class OrderControllerIntegrationTest {
         UUID randomUUID = UUID.randomUUID();
         stubForProductWithId(randomUUID);
 
-        // when
+        // when - then
         webTestClient
                 .mutateWith(JWT)
                 .post().uri("/order/" + randomUUID)
@@ -158,6 +161,69 @@ public class OrderControllerIntegrationTest {
                 });
     }
 
+    @Test
+    void shouldReturnErrorMessage_whenPlaceOrderWithInvalidSubjectInJwt() {
+        // given
+        SecurityMockServerConfigurers.JwtMutator invalidJwt = mockJwt().jwt(jwt -> jwt
+                .claim("sub", "invalid"));
+        // when - then
+        webTestClient
+                .mutateWith(invalidJwt)
+                .post().uri("/order/" + UUID.randomUUID())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorResponse.class)
+                .consumeWith(response -> {
+                    ErrorResponse errorResponse = response.getResponseBody();
+                    assertThat(errorResponse).isNotNull();
+                    assertThat(errorResponse.getReason()).contains("Invalid UUID string");
+                });
+    }
+
+    @Test
+    void shouldReturnErrorMessage_whenPlaceOrderWithMissingEmailInJwt() {
+        // given
+        UUID randomUUID = UUID.randomUUID();
+        stubForProductWithId(randomUUID);
+
+        SecurityMockServerConfigurers.JwtMutator invalidJwt = mockJwt().jwt(jwt -> jwt
+                .claim("sub", USER_ID));
+
+        // when - then
+        webTestClient
+                .mutateWith(invalidJwt)
+                .post().uri("/order/" + randomUUID)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorResponse.class)
+                .consumeWith(response -> {
+                    ErrorResponse errorResponse = response.getResponseBody();
+                    assertThat(errorResponse).isNotNull();
+                    assertThat(errorResponse.getReason()).contains("No email found in the request");
+                });
+    }
+
+    @ParameterizedTest
+    @WithMockUser(value = USER_ID)
+    @ValueSource(ints = {400, 401, 404})
+    void shouldReturnErrorMessage_whenPlaceOrderAndErrorInProductEndpoint(int statusCode) {
+        // given
+        stubForError(statusCode);
+
+        // when - then
+        webTestClient
+                .mutateWith(JWT)
+                .post().uri("/order/" + UUID.randomUUID())
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(ErrorResponse.class)
+                .consumeWith(response -> {
+                    ErrorResponse errorResponse = response.getResponseBody();
+                    assertThat(errorResponse).isNotNull();
+                    assertThat(errorResponse.getReason()).contains(String.valueOf(statusCode));
+                });
+    }
+
     private static void stubForProductWithId(UUID randomUUID) {
         wireMockServer.stubFor(WireMock.get("/product/" + randomUUID)
                 .willReturn(aResponse()
@@ -170,5 +236,11 @@ public class OrderControllerIntegrationTest {
                                     "price": 100.0
                                 }
                                 """.formatted(randomUUID))));
+    }
+
+    private static void stubForError(int httpStatus) {
+        wireMockServer.stubFor(WireMock.get(urlPathTemplate("/product/{id}"))
+                .willReturn(aResponse()
+                        .withStatus(httpStatus)));
     }
 }

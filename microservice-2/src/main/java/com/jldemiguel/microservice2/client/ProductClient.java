@@ -38,7 +38,7 @@ public class ProductClient {
                         .bodyToMono(Product.class))
                 .onErrorResume(e -> {
                     log.error("Error when calling getProductById: " + e.getMessage(), e);
-                    return Mono.error(new RuntimeException("Error when calling getProductById."));
+                    return Mono.error(e);
                 });
     }
 }
