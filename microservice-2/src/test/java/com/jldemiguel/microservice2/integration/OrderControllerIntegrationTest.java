@@ -12,8 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,7 +27,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.jldemiguel.microservice2.integration.OrderControllerIntegrationTest.PORT;
@@ -78,15 +76,9 @@ public class OrderControllerIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideControllerPaths")
+    @ValueSource(strings = {"/order", "/order/id"})
     void shouldReturn401_whenUnauthorizedRequest(String path) {
         webTestClient.get().uri(path).exchange().expectStatus().isUnauthorized();
-    }
-
-    public static Stream<Arguments> provideControllerPaths() {
-        return Stream.of(
-                Arguments.of("/order", "/order/id")
-        );
     }
 
     @Test

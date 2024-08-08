@@ -7,8 +7,7 @@ import com.jldemiguel.microservice1.repository.ProductsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +18,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,15 +45,9 @@ public class ProductControllerIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideControllerPaths")
+    @ValueSource(strings = {"/product", "/product/id"})
     void shouldReturn401_whenUnauthorizedRequest(String path) throws Exception {
         mockMvc.perform(get(path)).andExpect(status().isUnauthorized());
-    }
-
-    public static Stream<Arguments> provideControllerPaths() {
-        return Stream.of(
-                Arguments.of("/product", "/product/id")
-        );
     }
 
     @Test
