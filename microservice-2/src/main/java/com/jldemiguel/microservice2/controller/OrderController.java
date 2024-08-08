@@ -6,9 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -20,17 +21,19 @@ public class OrderController {
     private final OrderService service;
 
     @GetMapping("")
-    public ResponseEntity<List<Order>> getUserProducts(Principal principal) {
+    public ResponseEntity<Flux<Order>> getUserProducts(Principal principal) {
         log.info("Getting orders for user: " + principal.getName());
         return ResponseEntity.ok(service.getUserOrders(UUID.fromString(principal.getName())));
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity<Order> placeOrder(Principal principal, @PathVariable UUID productId) {
+    public ResponseEntity<Mono<Order>> placeOrder(Principal principal, @PathVariable UUID productId) {
         log.info("Placing order for user: " + principal.getName() + " for product: " + productId);
-        Order order = service.placeOrder(Order.builder()
+        Mono<Order> order = service.placeOrder(Order.builder()
+                .id(UUID.randomUUID())
                 .productId(productId)
                 .userId(UUID.fromString(principal.getName()))
+                .isNew(true)
                 .build());
         return ResponseEntity.ok(order);
     }

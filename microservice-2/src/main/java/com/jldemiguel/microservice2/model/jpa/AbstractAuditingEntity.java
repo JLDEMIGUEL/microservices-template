@@ -1,19 +1,15 @@
 package com.jldemiguel.microservice2.model.jpa;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.*;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -23,10 +19,8 @@ import java.time.Instant;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
 @JsonIgnoreProperties(value = {"createdBy", "createdDate", "lastModifiedBy", "lastModifiedDate"}, allowGetters = true)
-public abstract class AbstractAuditingEntity<T> implements Serializable {
+public abstract class AbstractAuditingEntity<T> implements Persistable<T>, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -34,20 +28,31 @@ public abstract class AbstractAuditingEntity<T> implements Serializable {
     public abstract T getId();
 
     @CreatedBy
-    @Column(name = "created_by", nullable = false, length = 50, updatable = false)
+    @Size(max = 50)
+    @Column(value = "created_by")
     private String createdBy;
 
     @CreatedDate
     @Builder.Default
-    @Column(name = "created_date", updatable = false)
+    @Column(value = "created_date")
     private Instant createdDate = Instant.now();
 
     @LastModifiedBy
-    @Column(name = "last_modified_by", length = 50)
+    @Size(max = 50)
+    @Column(value = "last_modified_by")
     private String lastModifiedBy;
 
     @LastModifiedDate
     @Builder.Default
-    @Column(name = "last_modified_date")
+    @Column(value = "last_modified_date")
     private Instant lastModifiedDate = Instant.now();
+
+    @Transient
+    private boolean isNew;
+
+    @Override
+    @Transient
+    public boolean isNew() {
+        return this.isNew || getId() == null;
+    }
 }

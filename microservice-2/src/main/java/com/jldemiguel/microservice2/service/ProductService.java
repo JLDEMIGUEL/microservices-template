@@ -5,6 +5,7 @@ import com.jldemiguel.microservice2.model.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public class ProductService {
 
     private final ProductClient client;
 
-    public Product getProductById(UUID id) {
+    public Mono<Product> getProductById(UUID id) {
         log.info("Checking if product exists: " + id);
         return client.getProductById(id);
     }

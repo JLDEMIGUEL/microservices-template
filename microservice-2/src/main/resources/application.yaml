@@ -4,15 +4,9 @@ server:
 spring:
   application:
     name: microservice-2
-  datasource:
-    url: jdbc:h2:file:./testdb;NON_KEYWORDS=order;AUTO_SERVER=TRUE
-    driverClassName: org.h2.Driver
-    username: sa
+  r2dbc:
+    url: r2dbc:h2:file:///./testdb;AUTO_SERVER=TRUE
     password:
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: none
   h2:
     console:
       enabled: true
@@ -37,6 +31,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    webclient:
+      enabled: true
 
 management:
   endpoints:
@@ -55,4 +51,4 @@ management:
       enabled: true
 
 microservice-1:
-  url: microservice-1
+  url: http://microservice-1

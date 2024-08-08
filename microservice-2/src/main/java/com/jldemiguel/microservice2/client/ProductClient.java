@@ -1,58 +1,44 @@
 package com.jldemiguel.microservice2.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jldemiguel.microservice2.model.Product;
-import com.jldemiguel.microservice2.model.reponse.ErrorResponse;
-import feign.RequestInterceptor;
-import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.UUID;
 
+@Slf4j
+@Service
+public class ProductClient {
 
-@FeignClient(value = "${microservice-1.url}",
-        path = "/product",
-        configuration = ProductClient.Config.class)
-public interface ProductClient {
+    private final WebClient webClient;
 
-    @GetMapping("/{id}")
-    Product getProductById(@PathVariable UUID id);
+    public ProductClient(@Value("${microservice-1.url}") String baseUrl, @Qualifier("lbWebClient") WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl(baseUrl + "/product").build();
+    }
 
-    @Slf4j
-    class Config {
-
-        @Bean
-        public RequestInterceptor requestInterceptor() {
-            return request -> {
-                log.info("Adding authorization header to request {}", request.url());
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                if (authentication != null && authentication.getCredentials() instanceof Jwt jwt) {
-                    request.header("Authorization", "Bearer " + jwt.getTokenValue());
-                }
-            };
-        }
-
-        @Bean
-        public ErrorDecoder errorDecoder(ObjectMapper objectMapper) {
-            return (methodKey, response) -> {
-                try {
-                    ErrorResponse errorResponse =
-                            objectMapper.readValue(response.body().asInputStream(), ErrorResponse.class);
-                    log.error("Error when calling " + methodKey + ". Error: " + errorResponse.getReason());
-                    throw new RuntimeException("Error when calling " + methodKey + ". Error: " +
-                            errorResponse.getReason());
-                } catch (IOException e) {
-                    throw new RuntimeException("Error when calling " + methodKey + ".");
-                }
-            };
-        }
+    public Mono<Product> getProductById(UUID id) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .flatMap(authentication -> webClient.get()
+                        .uri("/{id}", id)
+                        .headers(headers -> {
+                            log.info("Adding authorization header to request to microservice-1");
+                            if (authentication != null && authentication.getCredentials() instanceof Jwt jwt) {
+                                headers.setBearerAuth(jwt.getTokenValue());
+                            }
+                        })
+                        .retrieve()
+                        .bodyToMono(Product.class))
+                .onErrorResume(e -> {
+                    log.error("Error when calling getProductById: " + e.getMessage(), e);
+                    return Mono.error(new RuntimeException("Error when calling getProductById."));
+                });
     }
 }

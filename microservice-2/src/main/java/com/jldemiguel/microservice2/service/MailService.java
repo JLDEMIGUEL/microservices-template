@@ -7,9 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
@@ -22,24 +24,27 @@ public class MailService {
 
     private final StreamBridge streamBridge;
 
-    public void sendEmail(Product product) {
-        UserOrder userOrder = UserOrder.builder()
-                .email(getEmail())
-                .price(product.getPrice())
-                .product(product.getName())
-                .build();
-        log.info("Sending email {}", userOrder);
-        streamBridge.send(SEND_EMAIL_EXCHANGE, MessageBuilder.withPayload(userOrder)
-                .setHeader(ROUTING_KEY_HEADER, PLACE_ORDER_ROUTING_KEY)
-                .build());
+    public Mono<Void> sendEmail(Product product) {
+        return getEmail()
+                .map(email -> {
+                    UserOrder userOrder = UserOrder.builder()
+                            .email(email)
+                            .price(product.getPrice())
+                            .product(product.getName())
+                            .build();
+                    log.info("Sending email {}", userOrder);
+                    streamBridge.send(SEND_EMAIL_EXCHANGE, MessageBuilder.withPayload(userOrder)
+                            .setHeader(ROUTING_KEY_HEADER, PLACE_ORDER_ROUTING_KEY)
+                            .build());
+                    return userOrder;
+                }).then();
     }
 
-    private String getEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim("email");
-        } else {
-            throw new RuntimeException("User not authenticated");
-        }
+    private Mono<String> getEmail() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(principal -> principal instanceof Jwt)
+                .map(principal -> ((Jwt) principal).getClaim("email"));
     }
 }
