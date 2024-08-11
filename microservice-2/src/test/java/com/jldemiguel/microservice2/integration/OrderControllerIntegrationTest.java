@@ -7,6 +7,7 @@ import com.jldemiguel.microservice2.config.TestConfig;
 import com.jldemiguel.microservice2.model.UserOrder;
 import com.jldemiguel.microservice2.model.jpa.Order;
 import com.jldemiguel.microservice2.model.reponse.ErrorResponse;
+import com.jldemiguel.microservice2.model.reponse.OrderDto;
 import com.jldemiguel.microservice2.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,6 +94,9 @@ public class OrderControllerIntegrationTest {
                 Order.builder().id(UUID.randomUUID()).productId(UUID.randomUUID()).userId(UUID.fromString(USER_ID)).isNew(true).build()
         );
         orderRepository.saveAll(savedOrders).blockLast();
+        for (int i = 0; i < savedOrders.size(); i++) {
+            stubForProduct(savedOrders.get(i).getProductId(), "Product " + (i + 1));
+        }
 
         // when - then
         webTestClient
@@ -100,11 +104,13 @@ public class OrderControllerIntegrationTest {
                 .get().uri("/order")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(Order.class)
+                .expectBodyList(OrderDto.class)
                 .hasSize(3)
                 .consumeWith(response -> {
-                    List<Order> orders = response.getResponseBody();
-                    assertThat(orders).allMatch(order -> USER_ID.equals(order.getUserId().toString()));
+                    List<OrderDto> orders = response.getResponseBody();
+                    assertThat(orders).allMatch(order -> order.getName().contains("Product")
+                                                         && order.getPrice() == 100.0
+                                                         && order.getCreatedDate() != null);
                 });
     }
 
@@ -133,7 +139,7 @@ public class OrderControllerIntegrationTest {
     void shouldSaveOrderAndSendEmail_whenSaveOrderUrlIsCalledAndValidProduct() {
         // given
         UUID randomUUID = UUID.randomUUID();
-        stubForProductWithId(randomUUID);
+        stubForProduct(randomUUID, "Product 1");
 
         // when - then
         webTestClient
@@ -141,13 +147,14 @@ public class OrderControllerIntegrationTest {
                 .post().uri("/order/" + randomUUID)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Order.class)
+                .expectBody(OrderDto.class)
                 .consumeWith(response -> {
                     // then
-                    Order order = response.getResponseBody();
+                    OrderDto order = response.getResponseBody();
                     assertThat(order).isNotNull();
-                    assertThat(order.getUserId().toString()).isEqualTo(USER_ID);
-                    assertThat(order.getProductId().toString()).isEqualTo(randomUUID.toString());
+                    assertThat(order.getName()).isEqualTo("Product 1");
+                    assertThat(order.getPrice()).isEqualTo(100.0);
+                    assertThat(order.getCreatedDate()).isNotNull();
 
                     Order dbOrder = orderRepository.findAllByUserIdOrderByCreatedDateDesc(UUID.fromString(USER_ID)).blockFirst();
                     assertThat(dbOrder).isNotNull();
@@ -184,7 +191,7 @@ public class OrderControllerIntegrationTest {
     void shouldReturnErrorMessage_whenPlaceOrderWithMissingEmailInJwt() {
         // given
         UUID randomUUID = UUID.randomUUID();
-        stubForProductWithId(randomUUID);
+        stubForProduct(randomUUID, "Product 1");
 
         SecurityMockServerConfigurers.JwtMutator invalidJwt = mockJwt().jwt(jwt -> jwt
                 .claim("sub", USER_ID));
@@ -224,18 +231,18 @@ public class OrderControllerIntegrationTest {
                 });
     }
 
-    private static void stubForProductWithId(UUID randomUUID) {
-        wireMockServer.stubFor(WireMock.get("/product/" + randomUUID)
+    private static void stubForProduct(UUID id, String name) {
+        wireMockServer.stubFor(WireMock.get("/product/" + id)
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                                 {
                                     "id": "%s",
-                                    "name": "Product 1",
+                                    "name": "%s",
                                     "price": 100.0
                                 }
-                                """.formatted(randomUUID))));
+                                """.formatted(id, name))));
     }
 
     private static void stubForError(int httpStatus) {

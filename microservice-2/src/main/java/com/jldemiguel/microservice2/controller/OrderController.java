@@ -1,6 +1,7 @@
 package com.jldemiguel.microservice2.controller;
 
 import com.jldemiguel.microservice2.model.jpa.Order;
+import com.jldemiguel.microservice2.model.reponse.OrderDto;
 import com.jldemiguel.microservice2.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +22,15 @@ public class OrderController {
     private final OrderService service;
 
     @GetMapping("")
-    public ResponseEntity<Flux<Order>> getUserProducts(Principal principal) {
+    public ResponseEntity<Flux<OrderDto>> getUserProducts(Principal principal) {
         log.info("Getting orders for user: " + principal.getName());
         return ResponseEntity.ok(service.getUserOrders(UUID.fromString(principal.getName())));
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity<Mono<Order>> placeOrder(Principal principal, @PathVariable UUID productId) {
+    public ResponseEntity<Mono<OrderDto>> placeOrder(Principal principal, @PathVariable UUID productId) {
         log.info("Placing order for user: " + principal.getName() + " for product: " + productId);
-        Mono<Order> order = service.placeOrder(Order.builder()
+        Mono<OrderDto> order = service.placeOrder(Order.builder()
                 .id(UUID.randomUUID())
                 .productId(productId)
                 .userId(UUID.fromString(principal.getName()))
