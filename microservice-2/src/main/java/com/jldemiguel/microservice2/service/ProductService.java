@@ -17,7 +17,7 @@ public class ProductService {
     private final ProductClient client;
 
     public Mono<Product> getProductById(UUID id) {
-        log.info("Checking if product exists: " + id);
+        log.info("Getting product by id: " + id);
         return client.getProductById(id);
     }
 }

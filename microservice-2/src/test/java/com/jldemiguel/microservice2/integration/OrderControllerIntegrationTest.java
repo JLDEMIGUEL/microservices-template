@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.jldemiguel.microservice2.config.TestConfig;
+import com.jldemiguel.microservice2.model.Product;
 import com.jldemiguel.microservice2.model.UserOrder;
 import com.jldemiguel.microservice2.model.jpa.Order;
 import com.jldemiguel.microservice2.model.reponse.ErrorResponse;
@@ -17,6 +18,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.context.annotation.Import;
@@ -26,11 +28,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.jldemiguel.microservice2.config.CacheConfig.CACHE_NAME;
 import static com.jldemiguel.microservice2.integration.OrderControllerIntegrationTest.PORT;
 import static com.jldemiguel.microservice2.util.PollingUtils.poll;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,6 +67,9 @@ public class OrderControllerIntegrationTest {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private OutputDestination output;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     private static WireMockServer wireMockServer;
 
     @BeforeAll
@@ -74,6 +80,7 @@ public class OrderControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        cacheManager.getCache(CACHE_NAME).clear();
         orderRepository.deleteAll().block();
         wireMockServer.resetAll();
     }
@@ -88,15 +95,7 @@ public class OrderControllerIntegrationTest {
     @WithMockUser(value = USER_ID)
     void shouldGetAllOrders_whenGetAllOrdersUrlIsCalled() {
         // given
-        List<Order> savedOrders = List.of(
-                Order.builder().id(UUID.randomUUID()).productId(UUID.randomUUID()).userId(UUID.fromString(USER_ID)).isNew(true).build(),
-                Order.builder().id(UUID.randomUUID()).productId(UUID.randomUUID()).userId(UUID.fromString(USER_ID)).isNew(true).build(),
-                Order.builder().id(UUID.randomUUID()).productId(UUID.randomUUID()).userId(UUID.fromString(USER_ID)).isNew(true).build()
-        );
-        orderRepository.saveAll(savedOrders).blockLast();
-        for (int i = 0; i < savedOrders.size(); i++) {
-            stubForProduct(savedOrders.get(i).getProductId(), "Product " + (i + 1));
-        }
+        buildSaveAndStubOrder(3);
 
         // when - then
         webTestClient
@@ -108,9 +107,10 @@ public class OrderControllerIntegrationTest {
                 .hasSize(3)
                 .consumeWith(response -> {
                     List<OrderDto> orders = response.getResponseBody();
+                    assertThat(orders).hasSize(3);
                     assertThat(orders).allMatch(order -> order.getName().contains("Product")
-                                                         && order.getPrice() == 100.0
-                                                         && order.getCreatedDate() != null);
+                            && order.getPrice() == 100.0
+                            && order.getCreatedDate() != null);
                 });
     }
 
@@ -132,6 +132,48 @@ public class OrderControllerIntegrationTest {
                     assertThat(errorResponse).isNotNull();
                     assertThat(errorResponse.getReason()).contains("Invalid UUID string");
                 });
+    }
+
+    @Test
+    @WithMockUser(value = USER_ID)
+    void shouldPopulateCache_whenOrderUrlIsCalledAndProductIsNotInCache() {
+        // given
+        Order savedOrder = buildSaveAndStubOrder(1).get(0);
+
+        // when
+        webTestClient
+                .mutateWith(JWT)
+                .get().uri("/order")
+                .exchange()
+                .expectStatus().isOk();
+        //then
+        Product product = cacheManager.getCache(CACHE_NAME).get(savedOrder.getProductId(), Product.class);
+        assertThat(product).isNotNull();
+        assertThat(product.getName()).isEqualTo("Product 1");
+        assertThat(product.getPrice()).isEqualTo(100.0);
+    }
+
+    @Test
+    @WithMockUser(value = USER_ID)
+    void shouldHitCache_whenOrderUrlIsCalledAndProductIsInCache() {
+        // given
+        Order savedOrder = buildAndSave(1).get(0);
+        cacheManager.getCache(CACHE_NAME).put(savedOrder.getProductId(),
+                new Product(savedOrder.getProductId(), "Product 1", 100.0));
+
+        // when
+        webTestClient
+                .mutateWith(JWT)
+                .get().uri("/order")
+                .exchange()
+                .expectStatus().isOk();
+        //then
+        Product product = cacheManager.getCache(CACHE_NAME).get(savedOrder.getProductId(), Product.class);
+        assertThat(product).isNotNull();
+        assertThat(product.getName()).isEqualTo("Product 1");
+        assertThat(product.getPrice()).isEqualTo(100.0);
+
+        wireMockServer.verify(0, getRequestedFor(urlEqualTo("/product/" + savedOrder.getProductId())));
     }
 
     @Test
@@ -231,6 +273,48 @@ public class OrderControllerIntegrationTest {
                 });
     }
 
+    @Test
+    @WithMockUser(value = USER_ID)
+    void shouldPopulateCache_whenPlaceOrderUrlIsCalledAndProductIsNotInCache() {
+        // given
+        UUID randomUUID = UUID.randomUUID();
+        stubForProduct(randomUUID, "Product 1");
+
+        // when - then
+        webTestClient
+                .mutateWith(JWT)
+                .post().uri("/order/" + randomUUID)
+                .exchange()
+                .expectStatus().isOk();
+
+        Product product = cacheManager.getCache(CACHE_NAME).get(randomUUID, Product.class);
+        assertThat(product).isNotNull();
+        assertThat(product.getName()).isEqualTo("Product 1");
+        assertThat(product.getPrice()).isEqualTo(100.0);
+    }
+
+    @Test
+    @WithMockUser(value = USER_ID)
+    void shouldHitCache_whenPlaceOrderUrlIsCalledAndProductIsNotInCache() {
+        // given
+        UUID randomUUID = UUID.randomUUID();
+        cacheManager.getCache(CACHE_NAME).put(randomUUID,
+                new Product(randomUUID, "Product 1", 100.0));
+
+        // when - then
+        webTestClient
+                .mutateWith(JWT)
+                .post().uri("/order/" + randomUUID)
+                .exchange()
+                .expectStatus().isOk();
+
+        Product product = cacheManager.getCache(CACHE_NAME).get(randomUUID, Product.class);
+        assertThat(product).isNotNull();
+        assertThat(product.getName()).isEqualTo("Product 1");
+        assertThat(product.getPrice()).isEqualTo(100.0);
+        wireMockServer.verify(0, getRequestedFor(urlEqualTo("/product/" + randomUUID)));
+    }
+
     private static void stubForProduct(UUID id, String name) {
         wireMockServer.stubFor(WireMock.get("/product/" + id)
                 .willReturn(aResponse()
@@ -249,5 +333,32 @@ public class OrderControllerIntegrationTest {
         wireMockServer.stubFor(WireMock.get(urlPathTemplate("/product/{id}"))
                 .willReturn(aResponse()
                         .withStatus(httpStatus)));
+    }
+
+    private static Order buildNewOrder() {
+        return Order.builder()
+                .id(UUID.randomUUID())
+                .productId(UUID.randomUUID())
+                .userId(UUID.fromString(USER_ID))
+                .isNew(true)
+                .build();
+    }
+
+    public List<Order> buildAndSave(int count) {
+        List<Order> orders = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Order order = buildNewOrder();
+            orders.add(order);
+        }
+        orderRepository.saveAll(orders).blockLast();
+        return orders;
+    }
+
+    public List<Order> buildSaveAndStubOrder(int count) {
+        List<Order> orders = buildAndSave(count);
+        for (int i = 0; i < orders.size(); i++) {
+            stubForProduct(orders.get(i).getProductId(), "Product " + (i + 1));
+        }
+        return orders;
     }
 }
