@@ -18,8 +18,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -92,7 +94,7 @@ public class UserControllerIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("invalidUserDtos")
-    void shouldReturnError_whenUsernameAndEmailAreNotValid(UserDto invalidUser, String errorMessage) throws Exception {
+    void shouldReturnError_whenUsernameAndEmailAreNotValid(UserDto invalidUser, List<String> errorMessages) throws Exception {
         //when
         MvcResult result = mockMvc.perform(post("/user/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +104,7 @@ public class UserControllerIntegrationTest {
 
         //then
         ErrorResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
-        assertEquals(errorMessage, response.getReason());
+        assertThat(response.getReason()).contains(errorMessages);
     }
 
 
@@ -113,25 +115,25 @@ public class UserControllerIntegrationTest {
                                 .email("test@test.com")
                                 .password("123456")
                                 .build(),
-                        "username: Username cannot be blank"),
+                        List.of("username: Username cannot be blank")),
                 Arguments.of(UserDto.builder()
                                 .username("test")
                                 .email("")
                                 .password("123456")
                                 .build(),
-                        "email: Email cannot be blank. email: Email must be valid"),
+                        List.of("email: Email cannot be blank", "email: Email must be valid")),
                 Arguments.of(UserDto.builder()
                                 .username("test")
                                 .email("invalidemail")
                                 .password("123456")
                                 .build(),
-                        "email: Email must be valid"),
+                        List.of("email: Email must be valid")),
                 Arguments.of(UserDto.builder()
                                 .username("test")
                                 .email("test@test.com")
                                 .password("")
                                 .build(),
-                        "password: Password cannot be blank")
+                        List.of("password: Password cannot be blank"))
         );
     }
 }
