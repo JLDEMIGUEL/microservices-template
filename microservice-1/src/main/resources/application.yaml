@@ -42,3 +42,10 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: auth-code-grant-1
+      client-secret: auth-code-grant-1
+      use-basic-authentication-with-access-code-grant: true

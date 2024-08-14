@@ -39,6 +39,7 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.cloud:spring-cloud-starter-stream-rabbit'
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
 
     implementation 'io.r2dbc:r2dbc-h2'
 

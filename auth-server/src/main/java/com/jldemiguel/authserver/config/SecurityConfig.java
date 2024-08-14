@@ -151,7 +151,11 @@ public class SecurityConfig {
                 new AntPathRequestMatcher("/h2-console/**"),
                 new AntPathRequestMatcher("/actuator/health/livenessState"),
                 new AntPathRequestMatcher("/actuator/health/readinessState"),
-                new AntPathRequestMatcher("/user/register")
+                new AntPathRequestMatcher("/user/register"),
+                new AntPathRequestMatcher("/v3/api-docs"),
+                new AntPathRequestMatcher("/v3/api-docs/**"),
+                new AntPathRequestMatcher("/swagger-ui/**"),
+                new AntPathRequestMatcher("/swagger-ui")
         );
     }
 }
