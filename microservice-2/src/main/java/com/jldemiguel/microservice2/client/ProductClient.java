@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -22,7 +21,8 @@ public class ProductClient {
 
     private final WebClient webClient;
 
-    public ProductClient(@Value("${microservice-1.url}") String baseUrl, @Qualifier("lbWebClient") WebClient.Builder webClientBuilder) {
+    public ProductClient(@Value("${microservice-1.url}") String baseUrl,
+                         @Qualifier("lbWebClient") WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl(baseUrl + "/product").build();
     }
 
@@ -32,12 +32,6 @@ public class ProductClient {
                 .map(SecurityContext::getAuthentication)
                 .flatMap(authentication -> webClient.get()
                         .uri("/{id}", id)
-                        .headers(headers -> {
-                            log.info("Adding authorization header to request to microservice-1");
-                            if (authentication != null && authentication.getCredentials() instanceof Jwt jwt) {
-                                headers.setBearerAuth(jwt.getTokenValue());
-                            }
-                        })
                         .retrieve()
                         .bodyToMono(Product.class))
                 .onErrorResume(e -> {

@@ -15,6 +15,15 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9000
+      client:
+        provider:
+          client-microservice-1:
+            token-uri: http://localhost:9000/oauth2/token
+        registration:
+          client-microservice-1:
+            authorization-grant-type: client_credentials
+            client-id: client-microservice-1
+            client-secret: client-microservice-1
   cloud:
     stream:
       default-binder: rabbit
