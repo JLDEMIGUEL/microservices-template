@@ -4,9 +4,10 @@ import com.jldemiguel.microservice1.model.jpa.Product;
 import com.jldemiguel.microservice1.repository.ProductsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -15,8 +16,8 @@ public class ProductsService {
 
     private final ProductsRepository repository;
 
-    public List<Product> getAllProducts() {
-        return repository.findAll();
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     public Product getProductById(UUID id) {

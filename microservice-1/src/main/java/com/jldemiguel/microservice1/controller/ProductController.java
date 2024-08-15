@@ -4,13 +4,11 @@ import com.jldemiguel.microservice1.model.jpa.Product;
 import com.jldemiguel.microservice1.service.ProductsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -22,9 +20,10 @@ public class ProductController {
     private final ProductsService service;
 
     @GetMapping("")
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<Page<Product>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size) {
         log.info("Getting all products");
-        return ResponseEntity.ok(service.getAllProducts());
+        return ResponseEntity.ok(service.getAllProducts(PageRequest.of(page, size)));
     }
 
     @GetMapping("/{id}")
