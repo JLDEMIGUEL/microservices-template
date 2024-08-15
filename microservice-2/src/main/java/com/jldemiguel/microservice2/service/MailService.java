@@ -37,7 +37,7 @@ public class MailService {
                             .setHeader(ROUTING_KEY_HEADER, PLACE_ORDER_ROUTING_KEY)
                             .build());
                 }).then()
-                .onErrorMap(e -> new RuntimeException("No email found in the request"));
+                .onErrorMap(e -> new IllegalArgumentException("No email found in the request"));
     }
 
     private Mono<Object> getEmail() {

@@ -12,8 +12,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @ControllerAdvice
 public class OrderControllerAdvice {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(Exception e) {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(Exception e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .reason(e.getMessage())
                 .build();
