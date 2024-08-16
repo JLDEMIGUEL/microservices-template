@@ -32,6 +32,7 @@ public class User {
     private String role;
 
     @CreatedDate
+    @Builder.Default
     @Column(name = "registration_date", updatable = false)
     private Instant createdDate = Instant.now();
 }
