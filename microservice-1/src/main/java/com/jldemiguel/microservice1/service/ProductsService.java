@@ -24,4 +24,8 @@ public class ProductsService {
         return repository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Product with ID: " + id + " not found"));
     }
+
+    public Product createProduct(Product product) {
+        return repository.save(product);
+    }
 }

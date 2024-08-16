@@ -105,7 +105,9 @@ public class SecurityConfig {
                 org.springframework.security.core.userdetails.User userDetails =
                         (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
                 User user = repository.findById(UUID.fromString(userDetails.getUsername())).orElseThrow();
-                context.getClaims().claim("email", user.getEmail());
+                context.getClaims()
+                        .claim("email", user.getEmail())
+                        .claim("role", user.getRole());
             }
         };
     }
