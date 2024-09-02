@@ -2,7 +2,8 @@
 
 ## Introduction
 
-This project is a template for a microservices architecture, designed to provide a starting point for building scalable
+This project is a template for a Spring Boot based microservices architecture, designed to provide a starting point for
+building scalable
 and modular applications. It includes an Authentication Server following OAuth2.0 standard with different grant type
 flows, an API Gateway that serves as an entry point to the microservices, multiple microservices, each with its own
 dedicated responsibilities, and a Eureka server for service discovery.
